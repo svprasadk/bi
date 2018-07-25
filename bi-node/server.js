@@ -1,0 +1,71 @@
+var express = require('express');
+var path = require('path');
+var favicon = require('serve-favicon');
+var logger = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+
+let chalk = require('chalk');
+
+var app = express();
+
+
+
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(cookieParser());
+
+
+
+
+/* CORS ISSUE */
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', "*");
+
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+
+    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Headers', 'x-access-token,authorization,Content-Type,Access-Control-Request-Headers,enctype');
+
+    // Set to true if you need the website to include cookies in  requests
+    res.setHeader('Access-Control-Allow-Credentials', true);
+
+    if (req.method === 'OPTIONS') {
+        res.status(200);
+        res.end();
+    }
+    else {
+        // Pass to next layer of middleware
+        next();
+    }
+});
+/* CORS */
+
+
+// app.use(express.static(path.join(__dirname, 'public')));
+
+// app.use(express.static('client', { index: '/views/index.html' }));
+
+let routesV1_0 = require('./server/routes/routes.v1.0');
+
+require('./server/config/libs/mongoose');//initializing mongoose
+
+let config = require('./server/config/config');
+
+let fb = require('./server/config/libs/fb');
+
+fb.initialize(app);
+
+app.use('/api/v1.0', routesV1_0);
+
+app.use('/apidocs', express.static('apidocs'));
+
+app.listen(config.port);
+
+console.log(chalk.green('Server started on port : ' + config.port + " with " + process.env.NODE_ENV + ' mode'));
+
+module.exports = app;
